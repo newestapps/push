@@ -37,7 +37,7 @@ class CreateDevicesTable extends Migration
                 $table->string( "device_os_version")->required();
 
                 $table->integer('app_version')->required();
-                
+
                 $table->timestamps();
             });
         }

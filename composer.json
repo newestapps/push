@@ -25,7 +25,7 @@
     },
     "autoload": {
         "psr-4": {
-            "Newestapps\\Package\\": "./src/"
+            "Newestapps\\Push\\": "./src/"
         },
         "files": [],
         "classmap": [
