@@ -2,7 +2,7 @@
 
 use Illuminate\Database\Seeder;
 
-class PackageSeeder extends Seeder
+class PushSeeder extends Seeder
 {
 
     /**

@@ -1,7 +1,7 @@
 {
-    "name": "newestapps/package-kit",
+    "name": "newestapps/push",
     "version": "1.0.0",
-    "description": "Newestapps Package development kit",
+    "description": "Newestapps Push",
     "homepage": "https://newestapps.com.br",
     "license": "proprietary",
     "minimum-stability": "dev",
@@ -37,11 +37,11 @@
         "php": ">=7.1.0",
         "laravel/framework": ">=5.5.32",
         "newestapps/core": "dev-master"
-    }
+    },
     "extra": {
         "laravel": {
             "providers": [
-                "Newestapps\\Package\\Providers\\PackageServiceProvider"
+                "Newestapps\\Push\\Providers\\PushServiceProvider"
             ],
             "aliases": {
             }
