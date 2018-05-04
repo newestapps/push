@@ -4,29 +4,20 @@
  *   with PhpStorm
  */
 
-namespace Newestapps\Push;
+namespace Newestapps\Push\Facades;
 
-use Illuminate\Support\Facades\Facade;
 use Illuminate\Support\Facades\Route;
+use Newestapps\Push\Http\Middlewares\MobileRequest;
 
-class Push extends Facade
+class Push
 {
 
-    protected static function getFacadeAccessor()
+    public static function routes()
     {
-        return 'nw-push';
-    }
-
-    public static function route()
-    {
-        Route::group([
-            'prefix' => 'devices',
-            'as' => 'devices.',
-        ], function () {
-
-            Route::post('/', '');
-
-        });
+        return Route::prefix('push/')
+            ->middleware(['auth:api'])
+            ->as('nw-push::')
+            ->group(__DIR__.'/../../routes/push-routes.php');
     }
 
 }

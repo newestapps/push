@@ -28,15 +28,18 @@ class CreateDevicesTable extends Migration
         if (!Schema::hasTable($this->table)) {
             Schema::create($this->table, function (Blueprint $table) {
                 $table->increments('id');
-                $table->string('uuid')->unique();
+                $table->uuid('uuid')->unique();
+                $table->boolean('enabled')->default(true);
                 $table->morphs('owner');
 
                 $table->text("push_code")->required();
 
                 $table->enum('device_os', \Newestapps\Push\Enum\OS::toArray());
-                $table->string( "device_os_version")->required();
+                $table->string("device_os_version")->required();
 
                 $table->integer('app_version')->required();
+
+                $table->index('uuid');
 
                 $table->timestamps();
             });

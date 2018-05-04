@@ -36,6 +36,9 @@ class PushServiceProvider extends ServiceProvider
         $this->publishes([
             __DIR__.'/../../config/nw-push.php' => config_path('nw-push.php'),
         ], 'newestapps/push');
+
+        $this->app->bind(\Newestapps\Push\Repositories\DeviceRepository::class,
+            \Newestapps\Push\Repositories\DataSource\DeviceRepositoryEloquent::class);
     }
 
 }
