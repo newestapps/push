@@ -3,15 +3,19 @@
 namespace Newestapps\Push\Http\Controllers;
 
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Event;
 use LaravelFCM\Facades\FCM;
 use LaravelFCM\Message\OptionsBuilder;
 use LaravelFCM\Message\PayloadDataBuilder;
 use LaravelFCM\Response\DownstreamResponse;
 use Newestapps\Push\Enum\DeviceHeader;
 use Newestapps\Push\Enum\OS;
+use Newestapps\Push\Events\DeviceRegistered;
 use Newestapps\Push\Exception\DeviceNotFoundException;
+use Newestapps\Push\Exception\MissingDeviceException;
 use Newestapps\Push\Exception\UUIDException;
 use Newestapps\Push\Models\Device;
+use NotificationChannels\Apn\FeedbackService;
 use Prettus\Validator\LaravelValidator;
 use Prettus\Validator\Contracts\ValidatorInterface;
 use Prettus\Validator\Exceptions\ValidatorException;
@@ -96,48 +100,77 @@ class DeviceController extends ManagedController
         $device->enabled = true;
         $device->save();
 
-        $optionBuilder = new OptionsBuilder();
-        $optionBuilder->setTimeToLive(10);
+        Event::fire(new DeviceRegistered($device));
 
-        $dataBuilder = new PayloadDataBuilder();
-        $dataBuilder->addData(['user_id' => $user->id]);
+        if ($device->device_os == 'IOS') {
+            $apnConn = config('broadcasting.connections.apn');
+            if (!empty($apnConn)) {
+                $feedbackService = app(FeedbackService::class);
 
-        $option = $optionBuilder->build();
-        $data = $dataBuilder->build();
-
-        /** @var DownstreamResponse $downstreamResponse */
-        $downstreamResponse = FCM::sendTo([
-            $device->push_code,
-        ], $option, null, $data);
-
-        // DELETE DEVICES
-        $delete = array_merge(
-            $downstreamResponse->tokensToDelete()
-        );
-
-        if (count($delete) > 0) {
-            $toDelete = Device::whereIn('push_code', $delete)
-                ->delete();
-        }
-
-        // UPDATE TOKENS
-        $update = $downstreamResponse->tokensToModify();
-        if (count($update) > 0) {
-            $toUpdate = Device::whereIn('push_code', array_keys($update))
-                ->get();
-
-            foreach ($toUpdate as $tu) {
-                $tu->push_code = $update[$tu];
-                $tu->save();
+                /** @var ApnFeedback $feedback */
+                foreach ($feedbackService->get() as $feedback) {
+                    Device::where('push_code', $feedback->token)
+                        ->whereDeviceOs('IOS')
+                        ->whereOwnerType(get_class($user))
+                        ->whereOwnerId($user->id)
+                        ->update([
+                            'push_code' => null,
+                            'enabled' => false,
+                        ]);
+                }
             }
-        }
 
-        if ($downstreamResponse->numberSuccess() == 1) {
+            
+            
             return Newestapps::apiResponse(null, "Dispositivo registrado!", 200);
         }
 
-        if ($downstreamResponse->numberFailure() > 0) {
-            return Newestapps::apiErrorResponse(null, "Falha ao registrar o dispositivo!", 400);
+        if ($device->device_os == 'ANDROID') {
+
+            $optionBuilder = new OptionsBuilder();
+            $optionBuilder->setTimeToLive(10);
+
+            $dataBuilder = new PayloadDataBuilder();
+            $dataBuilder->addData(['user_id' => $user->id]);
+
+            $option = $optionBuilder->build();
+            $data = $dataBuilder->build();
+
+            /** @var DownstreamResponse $downstreamResponse */
+            $downstreamResponse = FCM::sendTo([
+                $device->push_code,
+            ], $option, null, $data);
+
+            // DELETE DEVICES
+            $delete = array_merge(
+                $downstreamResponse->tokensToDelete()
+            );
+
+            if (count($delete) > 0) {
+                $toDelete = Device::whereIn('push_code', $delete)
+                    ->delete();
+            }
+
+            // UPDATE TOKENS
+            $update = $downstreamResponse->tokensToModify();
+            if (count($update) > 0) {
+                $toUpdate = Device::whereIn('push_code', array_keys($update))
+                    ->get();
+
+                foreach ($toUpdate as $tu) {
+                    $tu->push_code = $update[$tu];
+                    $tu->save();
+                }
+            }
+
+            if ($downstreamResponse->numberSuccess() == 1) {
+                return Newestapps::apiResponse(null, "Dispositivo registrado!", 200);
+            }
+
+            if ($downstreamResponse->numberFailure() > 0) {
+                return Newestapps::apiErrorResponse(null, "Falha ao registrar o dispositivo!", 400);
+            }
+
         }
     }
 

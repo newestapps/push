@@ -36,7 +36,8 @@
     "require": {
         "php": ">=7.1.0",
         "laravel/framework": ">=5.5.32",
-        "newestapps/core": "dev-master"
+        "newestapps/core": "dev-master",
+        "laravel-notification-channels/apn": "^0.3.1"
     },
     "extra": {
         "laravel": {
