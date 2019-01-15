@@ -84,9 +84,14 @@ class DeviceController extends ManagedController
 
         $device = Device::user($user)
             ->uuid($headers[DeviceHeader::X_DEVICE_ID])
+            ->orWhere('push_code', $request->get('push_code'))
             ->first();
 
+        $isNew = false;
+
         if ($device === null) {
+            $isNew = true;
+            
             $device = new Device();
             $device->owner_type = get_class($user);
             $device->owner_id = $user->id;
@@ -100,7 +105,7 @@ class DeviceController extends ManagedController
         $device->enabled = true;
         $device->save();
 
-        Event::fire(new DeviceRegistered($device));
+        Event::fire(new DeviceRegistered($device, $request, $isNew));
 
         if ($device->device_os == 'IOS') {
             $apnConn = config('broadcasting.connections.apn');
@@ -120,8 +125,6 @@ class DeviceController extends ManagedController
                 }
             }
 
-            
-            
             return Newestapps::apiResponse(null, "Dispositivo registrado!", 200);
         }
 

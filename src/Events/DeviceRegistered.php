@@ -4,6 +4,7 @@ namespace Newestapps\Push\Events;
 
 use App\Order;
 use Illuminate\Broadcasting\Channel;
+use Illuminate\Http\Request;
 use Illuminate\Queue\SerializesModels;
 use Illuminate\Broadcasting\PrivateChannel;
 use Illuminate\Broadcasting\PresenceChannel;
@@ -16,11 +17,19 @@ class DeviceRegistered
 {
     use Dispatchable, InteractsWithSockets, SerializesModels;
 
+    /** @var Device */
     private $device;
 
-    public function __construct(Device $device)
+    /** @var Request */
+    private $request;
+
+    private $newDevice;
+
+    public function __construct(Device $device, Request $request, $newDevice = false)
     {
         $this->device = $device;
+        $this->request = $request;
+        $this->newDevice = $newDevice;
     }
 
     /**
@@ -39,6 +48,19 @@ class DeviceRegistered
     public function getDevice(): Device
     {
         return $this->device;
+    }
+
+    /**
+     * @return Request
+     */
+    public function getRequest(): Request
+    {
+        return $this->request;
+    }
+
+    public function isNewDevice()
+    {
+        return $this->newDevice;
     }
 
 }

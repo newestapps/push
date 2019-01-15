@@ -33,11 +33,9 @@ trait HasPushDevices
                 ->whereDeviceOs('IOS')
                 ->where('push_code', '<>', null)
                 ->get();
-
-            return self::$apn->pluck('push_code')->toArray();
         }
 
-        return self::$apn;
+        return self::$apn->pluck('push_code')->toArray();
     }
 
     public function routeNotificationForGcm()
@@ -50,11 +48,9 @@ trait HasPushDevices
                 ->whereDeviceOs('ANDROID')
                 ->where('push_code', '<>', null)
                 ->get();
-
-            return self::$gcm->pluck('push_code')->toArray();
         }
 
-        return self::$gcm;
+        return self::$gcm->pluck('push_code')->toArray();
     }
 
 }
