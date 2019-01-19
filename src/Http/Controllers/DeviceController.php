@@ -2,6 +2,7 @@
 
 namespace Newestapps\Push\Http\Controllers;
 
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Event;
 use LaravelFCM\Facades\FCM;
@@ -83,26 +84,33 @@ class DeviceController extends ManagedController
         }
 
         $device = Device::user($user)
-            ->uuid($headers[DeviceHeader::X_DEVICE_ID])
-            ->orWhere('push_code', $request->get('push_code'))
+            ->Where('push_code', $request->get('push_code'))
+            ->where('bundle_id', $request->get('bundle_id', null))
             ->first();
 
         $isNew = false;
 
         if ($device === null) {
             $isNew = true;
-            
+
             $device = new Device();
-            $device->owner_type = get_class($user);
-            $device->owner_id = $user->id;
             $device->uuid = $headers[DeviceHeader::X_DEVICE_ID];
         }
 
+        $device->owner_type = get_class($user);
+        $device->owner_id = $user->id;
         $device->push_code = $request->get('push_code');
         $device->app_version = $request->get('app_version');
         $device->device_os = $request->get('device_os');
         $device->device_os_version = $request->get('device_os_version');
         $device->enabled = true;
+
+//        $user = $request->user();
+//        if(!empty($user) && $user instanceof Model){
+//            echo 1;exit;    $device->owner_type = get_class($user);
+//            $device->owner_id = $user->id;
+//        }echo 2;exit;
+
         $device->save();
 
         Event::fire(new DeviceRegistered($device, $request, $isNew));
